@@ -1,0 +1,156 @@
+# Enemy2 variables
+enemy2_width, enemy2_height = 37, 37
+enemy2_vel = 5.1
+enemies2 = []
+last_spawn_time2 = 0
+
+# same as spawn_enemy just added a 2 to every 'enemy' and adjustet time between spawns    
+def spawn_enemy2():
+    global last_spawn_time2
+    current_time = time.time()
+    if current_time - last_spawn_time2 >= 1.5:  # Spawn every second
+        side = random.choice(["left", "right", "top", "bottom"])
+        if side == "left":
+            x, y = 0, random.randint(0, win.get_height() - enemy2_height)
+        elif side == "right":
+            x, y = win.get_width() - enemy2_width, random.randint(0, win.get_height() - enemy2_height)
+        elif side == "top":
+            x, y = random.randint(0, win.get_width() - enemy2_width), 0
+        else:
+            x, y = random.randint(0, win.get_width() - enemy2_width), win.get_height() - enemy2_height
+        enemies2.append((x, y))
+        last_spawn_time2 = current_time
+
+# same as move_enemies just added a 2 to every 'enemy'
+def move_enemies2():
+    global enemies2
+    new_enemies2 = []
+    for x, y in enemies2:
+        dx, dy = player_x - x, player_y - y
+        distance = math.sqrt(dx**2 + dy**2)
+        dx, dy = dx / distance, dy / distance
+        x += dx * enemy2_vel
+        y += dy * enemy2_vel
+        new_enemies2.append((x, y))
+    enemies2 = new_enemies2
+
+# Check laser-enemy2 collisions (same as laser-enemy collisions)
+    new_enemies2 = []
+    for x, y in enemies2:
+        enemy2_rect = pygame.Rect(x, y, 37, 37)
+        enemy2_hit = False  # Flag to track if the enemy2 is hit
+        for cx, cy, _, _ in lasers:
+            laser_rect = pygame.Rect(cx, cy, 150, 150 )
+            if enemy2_rect.colliderect(laser_rect):
+                score += 2
+                # Enemy2 hit by a bullet
+                enemy2_hit = True
+                break  # No need to check other bullets for this enemy2
+        if not enemy2_hit:
+            new_enemies2.append((x, y))
+    enemies2 = new_enemies2  # Update the enemies2 list
+
+    # Check bullet-enemy2 collisions (same as bullet-enemy collisions)
+    new_enemies2 = []
+    for x, y in enemies2:
+        enemy2_rect = pygame.Rect(x, y, 37, 37)
+        enemy2_hit = False  # Flag to track if the enemy2 is hit
+        for bx, by, _, _ in bullets:
+            bullet_rect = pygame.Rect(bx, by, 10, 10 )
+            if enemy2_rect.colliderect(bullet_rect):
+                score += 2
+                # Enemy2 hit by a bullet
+                enemy2_hit = True
+                break  # No need to check other bullets for this enemy
+        if not enemy2_hit:
+            new_enemies2.append((x, y))
+
+    enemies2 = new_enemies2  # Update the enemies list
+
+run = True
+last_collision_time = time.time()  # Initialize last collision time
+while run:
+    pygame.time.delay(10)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[pygame.K_a]:
+        player_x = max(player_x - player_vel, 0)
+    if keys_pressed[pygame.K_d]:
+        player_x = min(player_x + player_vel, win.get_width() - player_width)
+    if keys_pressed[pygame.K_w]:
+        player_y = max(player_y - player_vel, 0)
+    if keys_pressed[pygame.K_s]:
+        player_y = min(player_y + player_vel, win.get_height() - player_height)
+    if keys_pressed[pygame.K_SPACE] or event.type == pygame.MOUSEBUTTONDOWN and event.button == left:
+        shoot_bullet()
+    if keys_pressed[pygame.K_ESCAPE]:
+        break
+    if event.type == pygame.MOUSEBUTTONUP and event.button == right:
+      #pos = pygame.mouse.get_pos()
+      shoot_laser()
+    
+    
+    #harder()
+    spawn_enemy()
+    move_enemies()
+    spawn_enemy2()
+    move_enemies2()
+    spawn_Fatenemy()
+    move_Fatenemies()
+    spawn_hb()
+    move_hbs()
+    check_collision()
+    scoreImpact()
+
+
+
+    # Update bullet positions
+    for i, (bx, by, bdx, bdy) in enumerate(bullets):
+        bullets[i] = (bx + bdx, by + bdy, bdx, bdy)
+        
+    # Update laser positions
+    for j, (cx, cy, cdx, cdy) in enumerate(lasers):
+        lasers[j] = (cx + cdx, cy + cdy, cdx, cdy)
+
+    # Draw everything
+    win.fill((0, 0, 0)) 
+    pygame.draw.rect(win, (255, 0, 0), (player_x, player_y, player_width, player_height))
+    win.blit(image2, (player_x, player_y, player_width, player_height))
+    for bx, by, _, _ in bullets:
+        pygame.draw.rect(win, (250, 250, 255), (bx, by, bullet_width, bullet_height))
+        win.blit(image4, (bx, by, bullet_width, bullet_height))
+    for x, y in enemies:
+        pygame.draw.rect(win, (0, 255, 0), (x, y, enemy_width, enemy_height))
+        win.blit(image, (x, y, enemy_width, enemy_height))
+    for cx, cy, _, _ in lasers:
+        pygame.draw.rect(win, (250, 250, 0), (cx, cy, laser_width, laser_height))
+        win.blit(image5, (cx, cy, laser_width, laser_height))
+    for x, y in enemies2:
+        pygame.draw.rect(win, (0, 255, 0), (x, y, enemy2_width, enemy2_height))
+        win.blit(image3, (x, y, enemy2_width, enemy2_height))
+    for x, y in hbs:
+        pygame.draw.rect(win, (255, 0, 0), (x, y, hb_width, hb_height))
+        win.blit(image6, (x, y, hb_width, hb_height))
+    for x, y in Fatenemies:
+        pygame.draw.rect(win, (255, 255, 255), (x, y, Fatenemy_width, Fatenemy_height))
+        win.blit(image7, (x, y, Fatenemy_width, Fatenemy_height))
+    #for x, y in bosses:
+    #    pygame.draw.rect(win, (255, 255, 255), (x, y, boss_width, boss_height))
+    
+        
+    
+    font = pygame.font.Font(None, 50)  # Load the default font, size 50
+    # Display the score
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))  # White text
+    win.blit(score_text, (10, 10))  
+    # Display Health
+    Health_text = font.render(f"Health: {player_health}", True, (255, 30, 30))
+    win.blit(Health_text, (500, 10))
+
+
+
+
+    pygame.display.update()

@@ -1,0 +1,157 @@
+import pygame
+import math
+import random
+
+# Your existing Fatenemy variables
+Fatenemy_width, Fatenemy_height = 70, 70
+Fatenemy_vel = 7  # Velocity of enemy
+Fatenemies = []
+last_spawn_timeFat = 0
+
+class Fatenemy:
+    def __init__(self, x, y):
+        self.image = pygame.Surface((Fatenemy_width, Fatenemy_height))
+        self.image.fill((255, 0, 0))  # Red color (replace with your actual image)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.x = float(self.rect.x)
+        self.y = float(self.rect.y)
+        self.frequency = 2  # Adjust the frequency of the zigzag motion
+        self.amplitude = 30  # Adjust the amplitude (height) of the zigzag
+
+    def update(self):
+        t = pygame.time.get_ticks() * 0.01 % 500  # Adjust the time factor
+        self.rect.x += (Fatenemy_vel * self.frequency)
+        self.rect.y = (self.amplitude * math.sin(t)) + self.y
+
+def spawn_Fatenemy():
+    global last_spawn_timeFat
+    current_time = time.time()
+    if current_time - last_spawn_timeFat >= 60:  # Spawn every 60 seconds
+        side = random.choice(["left", "right", "top", "bottom"])
+        if side == "left":
+            x, y = 0, random.randint(0, win.get_height() - Fatenemy_height)
+        elif side == "right":
+            x, y = win.get_width() - Fatenemy_width, random.randint(0, win.get_height() - Fatenemy_height)
+        elif side == "top":
+            x, y = random.randint(0, win.get_width() - Fatenemy_width), 0
+        else:
+            x, y = random.randint(0, win.get_width() - Fatenemy_width), win.get_height() - Fatenemy_height
+        Fatenemies.append((x, y))
+        last_spawn_timeFat = current_time
+
+def move_Fatenemies():
+    global Fatenemies
+
+    new_Fatenemies = []
+    for x, y in Fatenemies:
+        dx, dy = player_x - x, player_y - y
+        distance = math.sqrt(dx**2 + dy**2)
+        dx, dy = dx / distance, dy / distance
+        x += dx * Fatenemy_vel
+        y += dy * Fatenemy_vel
+        new_Fatenemies.append((x, y))
+        t = pygame.time.get_ticks() * 0.01 % 500  # Adjust the time factor
+    Fatenemies = new_Fatenemies
+
+# Rest of your game code...
+
+#attempt to give boss health
+def check_Boss_collision():
+    global boss_health, bullets, lasers
+
+    def is_colliding(x, y):
+        return abs(boss_x - x) < boss_width and abs(boss_y - y) < boss_height
+
+    for x, y in enemies + enemies2:
+        if is_colliding(x, y):
+            if  - last_collision_time >= 1.5:  # Limit health loss to 1.5 per second (basically immunityframes)
+                boss_health -= 1
+                last_collision_time = current_time
+                if boss_health == 0:
+                    break
+                    #pygame.quit()
+    for x, y in Fatenemies:
+        if is_colliding(x, y):
+            current_time = time.time()
+            if current_time - last_collision_time >= 2:  # Limit health loss to 1.5 per second (basically immunityframes)
+                player_health -= 2
+                last_collision_time = current_time
+                if player_health == 0:
+                    print("Game Over! Your health reached 0.")
+                    ctypes.windll.user32.MessageBoxW(0, "Game Over! Your health reached 0.", "Dead as hell", 0)    
+                    reset()                
+                    #pygame.quit()
+
+def spawn_Boss():
+    global score
+    if score - 100 == 0: 
+        side = random.choice(["left", "right", "top", "bottom"])
+        if side == "left":
+            x, y = 0, random.randint(0, win.get_height() - enemy_height)
+        elif side == "right":
+            x, y = win.get_width() - boss_width, random.randint(0, win.get_height() - boss_height)
+        elif side == "top":
+            x, y = random.randint(0, win.get_width() - boss_width), 0
+        else:
+            x, y = random.randint(0, win.get_width() - boss_width), win.get_height() - boss_height
+        bosses.append((x, y))
+        score = score
+
+def move_bosses():
+    global bosses
+    new_bosses = []
+    for x, y in bosses:
+        dx, dy = player_x - x, player_y - y
+        distance = math.sqrt(dx**2 + dy**2)
+        dx, dy = dx / distance, dy / distance
+        x += dx * boss_vel
+        y += dy * boss_vel
+        new_bosses.append((x, y))
+    bosses = new_bosses
+
+
+#more attempts for a boss enemies
+# Boss variables
+boss_health = 100
+boss_x, boss_y = win_width // 2, win_height // 2
+boss_vel = 2
+
+class BossEnemy:
+    global player_x, player_y
+    def take_damage(self, damage):
+        self.health -= damage
+    def __init__(self):
+        self.x = boss_x
+        self.y = boss_y
+        self.health = boss_health
+
+    def move_towards_player(self, player_x, player_y):
+        dx, dy = player_x - self.x, player_y - self.y
+        distance = math.sqrt(dx**2 + dy**2)
+        if distance > 0:
+            dx, dy = dx / distance, dy / distance
+            self.x += dx * boss_vel
+            self.y += dy * boss_vel
+    def update(self):
+        # Boss enemy update logic (e.g., movement, attacks) goes here
+        # For example, move the boss or check for collisions with bullets/lasers
+        pass
+
+    def draw(self):
+        # Draw boss enemy (e.g., using rectangles or images)
+        pygame.draw.rect(win, white, (win_width // 2 - 50, win_height // 2 - 50, 100, 100))  # Example rectangle
+
+        # Display boss health
+        health_text = f"Boss Health: {self.health}"
+        health_surf = pygame.font.SysFont("comicsansms", 30).render(health_text, True, white)
+        win.blit(health_surf, (10, 10))
+
+# Example usage:
+boss = BossEnemy()
+
+    boss.update()
+    boss.draw()
+    boss.move_towards_player()
+    boss.take_damage()

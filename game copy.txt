@@ -1,0 +1,158 @@
+import random
+import pygame
+import math
+import time
+
+pygame.init()
+screen_info = pygame.display.Info()
+win = pygame.display.set_mode((screen_info.current_w, screen_info.current_h))
+pygame.display.set_caption("A Roguelike perhaps?")
+
+# Player variables
+player_x, player_y = 50, 50
+player_width, player_height = 40, 60
+player_vel = 5
+player_health = 3
+
+# Enemy variables
+enemy_width, enemy_height = 30, 30
+enemy_vel = 3
+enemies = []
+last_spawn_time = 0
+
+def spawn_enemy():
+    global last_spawn_time
+    current_time = time.time()
+    if current_time - last_spawn_time >= 3:  # Spawn every 3 seconds
+        side = random.choice(["left", "right", "top", "bottom"])
+        if side == "left":
+            x, y = 0, random.randint(0, win.get_height() - enemy_height)
+        elif side == "right":
+            x, y = win.get_width() - enemy_width, random.randint(0, win.get_height() - enemy_height)
+        elif side == "top":
+            x, y = random.randint(0, win.get_width() - enemy_width), 0
+        else:
+            x, y = random.randint(0, win.get_width() - enemy_width), win.get_height() - enemy_height
+        enemies.append((x, y))
+        last_spawn_time = current_time
+
+def move_enemies():
+    global enemies
+    new_enemies = []
+    for x, y in enemies:
+        dx, dy = player_x - x, player_y - y
+        distance = math.sqrt(dx**2 + dy**2)
+        dx, dy = dx / distance, dy / distance
+        x += dx * enemy_vel
+        y += dy * enemy_vel
+        new_enemies.append((x, y))
+    enemies = new_enemies
+
+def check_collision():
+    global player_health
+    for x, y in enemies:
+        if abs(player_x - x) < player_width and abs(player_y - y) < player_height:
+            player_health -= 1
+            if player_health <= 0:
+                print("Game Over! Your health reached 0.")
+                pygame.quit()
+                exit()
+    
+# Bullet variables
+bullet_width, bullet_height = 10, 10
+bullet_vel = 10
+bullets = []  # List to store active bullets
+last_bullet_time = 0  # Time when the last bullet was fired
+
+def shoot_bullet():
+    global last_bullet_time
+    current_time = time.time()
+    if current_time - last_bullet_time >= 0.5:  # Check if half a second has passed
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        dx, dy = mouse_x - player_x, mouse_y - player_y
+        distance = math.sqrt(dx**2 + dy**2)
+        bullet_dx, bullet_dy = bullet_vel * dx / distance, bullet_vel * dy / distance
+        bullets.append((player_x, player_y, bullet_dx, bullet_dy))
+        last_bullet_time = current_time
+
+run = True
+while run:
+    pygame.time.delay(10)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[pygame.K_a]:
+        player_x = max(player_x - player_vel, 0)
+    if keys_pressed[pygame.K_d]:
+        player_x = min(player_x + player_vel, win.get_width() - player_width)
+    if keys_pressed[pygame.K_w]:
+        player_y = max(player_y - player_vel, 0)
+    if keys_pressed[pygame.K_s]:
+        player_y = min(player_y + player_vel, win.get_height() - player_height)
+    if keys_pressed[pygame.K_SPACE]:
+        shoot_bullet()
+    if keys_pressed[pygame.K_ESCAPE]:
+        break
+    
+    spawn_enemy()
+    move_enemies()
+    check_collision()
+
+    # Update bullet positions
+    for i, (bx, by, bdx, bdy) in enumerate(bullets):
+        bullets[i] = (bx + bdx, by + bdy, bdx, bdy)
+
+   # Draw everything
+    win.fill((0, 0, 0))
+    pygame.draw.rect(win, (255, 0, 0), (player_x, player_y, player_width, player_height))
+    for bx, by, _, _ in bullets:
+        pygame.draw.rect(win, (0, 255, 0), (bx, by, bullet_width, bullet_height))
+    for x, y in enemies:
+        pygame.draw.rect(win, (0, 255, 0), (x, y, enemy_width, enemy_height))
+
+
+    pygame.display.update()
+    
+    #while True:
+
+    # for event in pygame.event.get():
+
+    #    if event.type == pygame.KEYDOWN:
+    #        if event.key == pygame.K_SPACE and not shoot_bullet:
+    #            shoot_bullet = True
+
+pygame.quit()
+
+
+
+
+
+
+
+#old check_collision:
+#def check_collision():
+#    global player_health, enemies, bullets, last_collision_time, lasers  # Declare enemies and last_collision_time as global
+#    for x, y in enemies:
+#        if abs(player_x - x) < player_width and abs(player_y - y) < player_height:
+#            current_time = time.time()
+#            if current_time - last_collision_time >= 1:  # Limit health loss to 1 per second
+#                player_health -= 1
+#                last_collision_time = current_time
+#                if player_health == 0:
+#                    print("Game Over! Your health reached 0.")
+#                    pygame.quit()
+#                   exit()
+#                    
+#    global enemies2  # Declare enemies2 as global
+#    for x, y in enemies2:
+#        if abs(player_x - x) < player_width and abs(player_y - y) < player_height:
+#            current_time = time.time()
+#            if current_time - last_collision_time >= 1:  # Limit health loss to 1 per second
+#                player_health -= 1
+#                last_collision_time = current_time
+#                if player_health == 0:
+#                    print("Game Over! Your health reached 0.")
+#                    pygame.quit()
+#                    exit()

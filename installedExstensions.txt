@@ -1,0 +1,10 @@
+autoDocstring - Python Docstring Generator v0.6.1
+Django v1.15.0
+Jinja v0.0.8
+pygame snips v0.0.4
+Pylance v2024.4.1
+Python v2024.6.0
+Python Debugger v2024.6.0
+Python Environment Manager v1.2.4
+Python Extension Pack v1.7.0
+Python Indent v1.18.0
